@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>بازی جورچین ساده</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f0f0f0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh; margin: 0;
+  }
+  #puzzle {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 5px;
+    background: #333;
+    padding: 5px;
+    border-radius: 10px;
+  }
+  .tile {
+    width: 100px;
+    height: 100px;
+    background: #4CAF50;
+    color: white;
+    font-size: 2em;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .empty {
+    background: #f0f0f0;
+    cursor: default;
+  }
+  #message {
+    margin-top: 20px;
+    font-size: 1.5em;
+    color: #333;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+</style>
+</head>
+<body>
+
+<div id="puzzle"></div>
+<div id="message"></div>
+<button onclick="shuffle()">شروع / مخلوط کردن</button>
+
+<script>
+  const puzzle = document.getElementById('puzzle');
+  const message = document.getElementById('message');
+  let tiles = [];
+  let emptyIndex = 8; // آخرین خانه خالی
+
+  function createTiles() {
+    puzzle.innerHTML = '';
+    tiles = [];
+    for(let i=1; i<=8; i++) {
+      let tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.textContent = i;
+      tile.addEventListener('click', () => moveTile(i-1));
+      tiles.push(tile);
+    }
+    // خانه خالی
+    let emptyTile = document.createElement('div');
+    emptyTile.className = 'tile empty';
+    tiles.push(emptyTile);
+
+    tiles.forEach(tile => puzzle.appendChild(tile));
+  }
+
+  // موقعیت اولیه: شماره‌ها 0 تا 7 به ترتیب، خانه 8 خالی
+  let positions = [...Array(9).keys()];
+
+  function render() {
+    for(let i=0; i<9; i++) {
+      puzzle.appendChild(tiles[positions[i]]);
+    }
+  }
+
+  function canMove(index) {
+    // چک کن خانه خالی کنار خانه انتخاب شده باشه
+    const empty = positions.indexOf(8);
+    const pos = positions.indexOf(index);
+    const diff = Math.abs(empty - pos);
+
+    // همسایگی افقی یا عمودی
+    if(diff === 1 && Math.floor(empty/3) === Math.floor(pos/3)) return true;
+    if(diff === 3) return true;
+    return false;
+  }
+
+  function moveTile(index) {
+    if(canMove(index)) {
+      const emptyPos = positions.indexOf(8);
+      const tilePos = positions.indexOf(index);
+      // جا به جا کن
+      [positions[emptyPos], positions[tilePos]] = [positions[tilePos], positions[emptyPos]];
+      render();
+      checkWin();
+    }
+  }
+
+  function shuffle() {
+    // مخلوط کردن با تعداد حرکت تصادفی
+    let shuffleCount = 1000;
+    for(let i=0; i<shuffleCount; i++) {
+      let neighbors = getNeighbors(positions.indexOf(8));
+      let randNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+      [positions[positions.indexOf(8)], positions[randNeighbor]] = [positions[randNeighbor], positions[positions.indexOf(8)]];
+    }
+    render();
+    message.textContent = '';
+  }
+
+  function getNeighbors(index) {
+    const neighbors = [];
+    let row = Math.floor(index / 3);
+    let col = index % 3;
+    if(row > 0) neighbors.push(index - 3);
+    if(row < 2) neighbors.push(index + 3);
+    if(col > 0) neighbors.push(index - 1);
+    if(col < 2) neighbors.push(index + 1);
+    return neighbors;
+  }
+
+  function checkWin() {
+    for(let i=0; i<8; i++) {
+      if(positions[i] !== i) return;
+    }
+    message.textContent = '🎉 تبریک! برنده شدی! 🎉';
+  }
+
+  createTiles();
+  render();
+</script>
+
+</body>
+</html>
